@@ -1,0 +1,5 @@
+load_file("nrngui.hoc")
+cvode.active(1) // turns on variable step method to turn off
+// select from the NEURON main menu: Tools -> VariableStepControl
+// and click the Use variable dt box to uncheck it.
+load_file("ngetting.hoc")

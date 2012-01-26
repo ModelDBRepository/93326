@@ -1,0 +1,220 @@
+/* 
+Written by Bob Calin-Jageman
+
+*/
+
+begintemplate spikehash
+	public lastspike, spikehash, ready, stepit, hashvec
+	objref cellpointer, hashvec
+
+	proc init() {
+		cellpointer = $o1
+		hashvec = new Vector()
+	}
+
+
+	proc ready() {
+		lastspike = cellpointer.sthold.lastspike
+		spikehash = cellpointer.soma.v
+	}
+
+	proc stepit() {
+		if (lastspike != cellpointer.sthold.lastspike) {
+			lastspike = cellpointer.sthold.lastspike
+			spikehash = 20-cellpointer.soma.v
+		} else {
+			spikehash = 0
+		}
+	}
+
+endtemplate spikehash
+
+objref taptrain, tapfile
+taptrain = new Vector()
+tapstart = 0
+
+func tapload() {
+
+	taptrain = new Vector()
+	tapfile = new File()
+	tapfile.ropen($s1)
+	while (!tapfile.eof()) {
+		taptrain.append(tapfile.scanvar())
+	}
+	tapfile.close
+	
+return 1
+}
+
+
+
+proc readsyn() {localobj synfile
+	synfile = new File()
+	synfile.ropen($s1)
+	
+
+	$o2.G1_weight = synfile.scanvar()
+	$o2.G1_eRev = synfile.scanvar()
+	$o2.G1_opentc = synfile.scanvar()
+	$o2.G1_closetc = synfile.scanvar()
+
+	$o2.G2_weight = synfile.scanvar()
+	$o2.G2_eRev = synfile.scanvar()
+	$o2.G2_opentc = synfile.scanvar()
+	$o2.G2_closetc = synfile.scanvar()
+
+	$o2.G3_weight = synfile.scanvar()
+	$o2.G3_eRev = synfile.scanvar()
+	$o2.G3_opentc = synfile.scanvar()
+	$o2.G3_closetc = synfile.scanvar()
+
+}
+
+
+
+/* simulation parameters */
+
+load_file("nrngui.hoc")
+
+// Directory structure reorganized from below to where instead
+// the mod files are in the top level directory and multiplatform
+// compatible running is documented in the readme.txt
+// chdir("c:/sims/ngetting")
+// chdir("mods")
+// nrn_load_dll("nrnmech.dll")
+// chdir("..")
+
+load_file("oldsim/C2Type.hoc") 
+load_file("oldsim/DSIType.hoc")
+load_file("oldsim/VSIType.hoc")
+load_file("oldsim/IFType.hoc")
+
+objref C2, DSI, VSI, IF
+C2 = new C2Type()
+DSI = new DSIType()
+VSI = new VSIType()
+IF = new IFType()
+
+
+load_file("oldsim/struct.hoc")
+readsyn("syndefs/ORAMP_DSI.txt", IF_DSIs)
+readsyn("syndefs/OC2_DSI.txt", C2_DSIs)
+readsyn("syndefs/OVSI_DSI.txt", VSI_DSIs)
+readsyn("syndefs/OVSI_C2.txt", VSI_C2s)
+readsyn("syndefs/ODSI_C2.txt", DSI_C2s)
+readsyn("syndefs/ODSI_VSI.txt", DSI_VSIs)
+readsyn("syndefs/OC2_VSI.txt", C2_VSIs)
+readsyn("syndefs/ODSI_DSI.txt", DSI_DSIs)
+readsyn("syndefs/OVSI_VSI.txt", VSI_VSIs)
+
+
+objref DSIhash, VSIhash, C2hash
+DSIhash = new spikehash(DSI)
+VSIhash = new spikehash(VSI)
+C2hash = new spikehash(C2)
+
+objref DSIv, C2v, VSIv, results
+
+DSIv = new Vector()
+C2v = new Vector()
+VSIv = new Vector()
+DSIv.record(&DSI.soma.v)
+C2v.record(&C2.soma.v)
+VSIv.record(&VSI.soma.v)
+DSIhash.hashvec.record(&DSIhash.spikehash)
+C2hash.hashvec.record(&C2hash.spikehash)
+VSIhash.hashvec.record(&VSIhash.spikehash)
+results = new Vector()
+
+
+
+access C2.soma
+load_file("ses/oldcpg.ses")
+
+objref celllist, spikelist
+celllist = new List()
+spikelist = new List()
+celllist.append(DSI)
+celllist.append(C2)
+celllist.append(VSI)
+
+
+objref stimcon
+stimcon = IF_DSInc
+stimdelay = 5000
+stimrate = 10
+stimduration = 1000
+x = 0
+
+objref ifreq
+ifreq = new Vector()
+ifreq.record(&DSI.sthold.freq)
+
+
+
+proc init() {
+			
+
+			finitialize(v_init)
+			fcurrent()
+			
+			C2.soma.v = -50
+			DSI.soma.v = -40
+			VSI.soma.v = -55
+
+			print "adding stim: ", stimcon
+			if (taptrain.size > 0) {
+				for (am = 0; am < taptrain.size; am = am+1) {
+				   stimcon.event(taptrain.x[am]+tapstart)
+				}
+			} else {
+
+				for(x = stimdelay; x < (stimdelay+stimduration); x = x + ((1/stimrate)*1000)) {
+					stimcon.event(x)
+				}
+			}
+
+	
+			DSIhash.ready()
+			C2hash.ready()
+			VSIhash.ready()
+
+		}
+
+proc savefreq() {local x localobj outfile
+	outfile = new File()
+	outfile.wopen($s1)
+
+	outfile.printf("label:%s\n", "ifreq")
+	outfile.printf("%o\n", ifreq.size())
+
+	for(x =0; x < ifreq.size(); x = x + 1) {
+			outfile.printf("%f	%f\n", x*dt, ifreq.x[x])
+		}
+	outfile.close()
+
+}
+
+
+
+proc advance() {
+	fadvance()
+	
+	DSIhash.stepit()
+	VSIhash.stepit()
+	C2hash.stepit()
+
+}
+
+proc saveresults() {local x, y localobj f
+	f = new File()
+	f.wopen($s3)
+	for (x=0; x<$o1.size; x = x +1) {
+		y = $o1.x[x]
+		if ($o2.hashvec.x[x] > 10) { y = $o2.hashvec.x[x] }
+		f.printf("%f	%f\n", dt*x, y)
+	}
+	f.close()
+}
+
+

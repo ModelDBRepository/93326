@@ -1,0 +1,148 @@
+/* 
+Written by Bob Calin-Jageman
+
+*/
+proc readsyn() {localobj synfile
+	synfile = new File()
+	synfile.ropen($s1)
+	
+
+	$o2.G1_weight = synfile.scanvar()
+	$o2.G1_eRev = synfile.scanvar()
+	$o2.G1_opentc = synfile.scanvar()
+	$o2.G1_closetc = synfile.scanvar()
+
+	$o2.G2_weight = synfile.scanvar()
+	$o2.G2_eRev = synfile.scanvar()
+	$o2.G2_opentc = synfile.scanvar()
+	$o2.G2_closetc = synfile.scanvar()
+
+	$o2.G3_weight = synfile.scanvar()
+	$o2.G3_eRev = synfile.scanvar()
+	$o2.G3_opentc = synfile.scanvar()
+	$o2.G3_closetc = synfile.scanvar()
+
+}
+
+
+/* simulation parameters */
+verbose = 1
+
+load_file("nrngui.hoc")
+
+// the below method is replaced by having the mod files
+// in the top level directory and the multiplatform
+// methods documented in the readme.txt
+// chdir("c:/sims/ngetting")
+// 
+/* load model files */
+// if (verbose = 1){
+// print "loading mod dll"
+// }
+// chdir("mods")
+// nrn_load_dll("nrnmech.dll")
+// chdir("..")
+
+load_file("oldsim/C2Type.hoc") 
+load_file("oldsim/DSIType.hoc")
+load_file("oldsim/VSIType.hoc")
+load_file("oldsim/IFType.hoc")
+
+objref C2, DSI, VSI, IF
+C2 = new C2Type()
+DSI = new DSIType()
+VSI = new VSIType()
+IF = new IFType()
+
+objectvar DSI_DSIs, DSI_DSInc
+DSI.soma {DSI_DSIs = new oldtsyn(0.5)}
+access DSI.soma
+DSI_DSInc = new NetCon(&v(0.5), DSI_DSIs, 0, 0, 1)
+
+objectvar VSI_VSIs, VSI_VSInc
+VSI.soma {VSI_VSIs = new oldtsyn(0.5)}
+access VSI.soma
+VSI_VSInc = new NetCon(&v(0.5), VSI_VSIs, 0, 0, 1)
+
+readsyn("syndefs/ODSI_DSI.txt", DSI_DSIs)
+readsyn("syndefs/OVSI_VSI.txt", VSI_VSIs)
+
+
+
+access C2.soma
+load_file("ses/oldcpg.ses")
+
+objref cellpointer, spikeholder
+cellpointer = VSI
+
+objref mysyns
+mysyns = new List("oldtsyn")
+cleara = 1
+
+
+proc init() {
+
+
+			finitialize(v_init)
+			fcurrent()
+			
+			C2.soma.v = -50
+			DSI.soma.v = -40
+			VSI.soma.v = -55
+
+			spikeholder = new Vector()
+			lastsp1 = 0
+
+
+		}
+
+proc advance() {
+
+			
+if (cellpointer.sthold.lastspike != lastsp1) {
+		//print t
+		spikeholder.append(t)
+		lastsp1 = cellpointer.sthold.lastspike
+	}
+
+		
+	fadvance()
+}
+
+
+proc cfplot() {local x, delay, firstsp, lastsp, y, offset localobj istim, outf
+	access $o1.soma
+	istim = new IClamp(0.5)
+	offset = $2
+	istim.del = offset
+	istim.dur = 10000
+	cellpointer = $o1
+	outf = new File()
+	outf.aopen("cfplot.txt")
+	for (x=$3; x < $4; x = x + 0.5) {
+		istim.amp = x
+		init()
+		run()
+		delay = 0
+		firstsp = 0
+		lastsp = 0
+		if (spikeholder.size() > 2) {
+		for (y=1; y < spikeholder.size(); y = y + 1) {
+			if ((spikeholder.x[y-1] > offset) && (spikeholder.x[y-1] < (offset+10000))) {
+				lastsp = spikeholder.x[y] - spikeholder.x[y-1]
+				if (firstsp == 0) {firstsp = lastsp }
+				if (delay ==0) {delay = spikeholder.x[y-1] - 1000 }
+			}
+		}
+		}	
+		if (firstsp != 0) {
+		print $o1, x, delay, 1/(firstsp/1000), 1/(lastsp/1000)
+		outf.printf("%s	%f	%f	%f	%f\n", $o1, x, delay, 1/(firstsp/1000), 1/(lastsp/1000))
+		} else {
+		outf.printf("%s	%f	%f	%f	%f\n", $o1, x, delay, firstsp, lastsp)
+		}
+	}
+	istim.amp = 0
+	outf.close()
+}
+

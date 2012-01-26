@@ -1,0 +1,139 @@
+w1 = 0
+w2 = 0
+w3 = 0
+tc1 = 0
+tc2 = 0
+tc3 = 0
+strdef fname
+
+proc readsyn() {localobj synfile
+	synfile = new File()
+	synfile.ropen($s1)
+	
+
+	$o2.G1_weight = synfile.scanvar()
+	$o2.G1_eRev = synfile.scanvar()
+	$o2.G1_opentc = synfile.scanvar()
+	$o2.G1_closetc = synfile.scanvar()
+
+	$o2.G2_weight = synfile.scanvar()
+	$o2.G2_eRev = synfile.scanvar()
+	$o2.G2_opentc = synfile.scanvar()
+	$o2.G2_closetc = synfile.scanvar()
+
+	$o2.G3_weight = synfile.scanvar()
+	$o2.G3_eRev = synfile.scanvar()
+	$o2.G3_opentc = synfile.scanvar()
+	$o2.G3_closetc = synfile.scanvar()
+
+	w1 = $o2.G1_weight 
+	tc1 = $o2.G1_closetc 
+	
+	w2 = $o2.G2_weight 
+	tc2 = $o2.G2_closetc 
+
+	w3 = $o2.G3_weight 
+	tc3 = $o2.G3_closetc 
+	
+}
+
+proc savesyn() {
+	w1 = $o1.G1_weight 
+	tc1 = $o1.G1_closetc 
+	
+	w2 = $o1.G2_weight 
+	tc2 = $o1.G2_closetc 
+
+	w3 = $o1.G3_weight 
+	tc3 = $o1.G3_closetc 
+}
+
+load_file("nrngui.hoc")
+
+// The below methods are replaced by having the mod
+// files in the top level directory and the multiplatform
+// usage documented in the readme.txt
+// chdir("c:/sims/ngetting")
+// chdir("mods")
+// nrn_load_dll("nrnmech.dll")
+// chdir("..")
+
+load_file("oldsim/C2Type.hoc") 
+load_file("oldsim/DSIType.hoc")
+load_file("oldsim/VSIType.hoc")
+load_file("oldsim/IFType.hoc")
+
+
+objref TestCell, IF
+IF = new IFType()
+
+/*  change here */
+TestCell = new C2Type()
+
+objectvar IF_Ts, IF_Tnc, T_Ts, T_Tnc
+TestCell.soma {IF_Ts = new oldtsyn(0.5)}
+access IF.soma
+IF_Tnc = new NetCon(&v(0.5), IF_Ts, 0, 0, 1)
+
+TestCell.soma {T_Ts = new oldtsyn(0.5)}
+access TestCell.soma
+T_Tnc = new NetCon(&v(0.5), T_Ts, 0, 0, 1)
+
+
+/* change here */
+readsyn("syndefs/nosyn.txt", T_Ts)
+readsyn("syndefs/ODSI_C2.txt", IF_Ts)
+savesyn(IF_Ts)
+synscale = 1
+tcscale = 1
+ifrate = 100
+ifstart = 45000
+
+access TestCell.soma
+objref etrode
+etrode = new IClamp(0.5)
+etrode.dur = 900000
+etrode.del = 0
+etrode.amp = 1.9
+
+objref ifreq
+ifreq = new Vector()
+ifreq.record(&TestCell.sthold.freq)
+
+tstop = 45000+60000
+
+load_file("fp.ses")
+
+proc init() {
+
+			finitialize(v_init)
+			fcurrent()
+
+			TestCell.soma.v = TestCell.ileak.vrest
+
+			for(x = 0; x < 1000; x = x + ifrate) {
+				IF_Tnc.event(ifstart + x)
+			}			
+			
+			IF_Ts.G1_weight = w1 * synscale
+			IF_Ts.G2_weight = w2 * synscale
+			IF_Ts.G3_weight = w3 * synscale
+			IF_Ts.G1_closetc = tc1 * tcscale
+			IF_Ts.G2_closetc = tc2 * tcscale
+			IF_Ts.G3_closetc = tc3 * tcscale
+		}
+
+
+proc savefreq() {local x localobj outfile
+	outfile = new File()
+	outfile.wopen($s1)
+
+	outfile.printf("label:%s\n", "ifreq")
+	outfile.printf("%o\n", ifreq.size())
+
+	for(x =0; x < ifreq.size(); x = x + 1) {
+			outfile.printf("%f	%f\n", x*dt, ifreq.x[x])
+		}
+	outfile.close()
+
+}

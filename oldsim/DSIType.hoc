@@ -1,0 +1,71 @@
+//execute1("celltypes.element(\"Cell\")")
+
+/* DSI Type Template  */
+/* Created by Bob Calin-Jageman */
+
+begintemplate DSIType
+	/* public references for L29Type */
+	public soma, ileak, ishunt, sthold, stholdnc, iunder, iundernc, iundernc2
+	
+	/* public sections and objectvars */
+	create soma
+	objectvar ileak, ishunt, sthold, stholdnc, iunder, iunder2, iundernc, iundernc2
+
+	proc init() {
+		
+
+		/* Basic Settings */
+		soma.L =  5.6491
+		soma.nseg = 1
+		soma.cm = 4.17*11.28
+		soma.v = -40
+		
+		/* leak object */
+		soma {ileak = new leak(0.5)}
+		ileak.vrest = -40
+		ileak.r = 30
+
+		/* shunt object */
+		soma {ishunt = new shunt(0.5)}
+		ishunt.G = 0
+		ishunt.erev = 0
+		ishunt.Bh = 1
+		ishunt.Ch = -1
+		ishunt.Th = 1
+		ishunt.Bm = 1
+		ishunt.Cm = 1
+		ishunt.Tm = 1
+
+		/* thold object */
+		soma {sthold = new thold(0.5)}
+		sthold.steadystate = -48
+		sthold.reset = 0
+		sthold.decaytc = 50
+
+		soma stholdnc = new NetCon(&v(0.5), sthold, 0, 0, 1)
+		setpointer sthold.nc_thresh, stholdnc.threshold
+
+		/* spike overshoot objects */
+		soma {iunder = new oldtsyn(0.5)}
+		soma iundernc = new NetCon(&v(0.5), iunder, 0, 0, 1)
+	
+		iunder.G1_weight = 0.25
+		iunder.G2_weight = 0.00223
+		iunder.G3_weight = 0
+	
+		iunder.G1_eRev = -80
+		iunder.G2_eRev = -80
+		iunder.G3_eRev = 0
+	
+		iunder.G1_opentc = 20
+		iunder.G2_opentc = 20
+		iunder.G3_opentc = 1
+
+		iunder.G1_closetc = 20
+		iunder.G2_closetc = 5000
+		iunder.G3_closetc = 1
+
+		
+	}
+
+endtemplate DSIType

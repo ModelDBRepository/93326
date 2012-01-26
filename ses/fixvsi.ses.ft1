@@ -1,0 +1,7 @@
+ParmFitness: Unnamed multiple run protocol
+	FitnessFunction: Test_2na
+		exp(-$1)
+		RegionFitness:
+
+	Parameters:
+End ParmFitness

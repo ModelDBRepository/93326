@@ -1,0 +1,73 @@
+//execute1("celltypes.element(\"Cell\")")
+
+/* VSI Type Template  */
+/* Created by Bob Calin-Jageman */
+
+begintemplate VSIType
+	/* public references for VSIType */
+	public soma, ileak, ishunt, sthold, stholdnc, iunder, iundernc
+	
+	/* public sections and objectvars */
+	create soma
+	objectvar ileak, ishunt, sthold, stholdnc, iunder, iundernc
+
+	proc init() {
+		
+
+		/* Basic Settings */
+		soma.L =  5.6491
+		soma.nseg = 1
+		soma.cm = 6.13*11.28
+		soma.v = -55
+		
+		/* leak object */
+		soma {ileak = new leak(0.5)}
+		ileak.vrest = -55
+		ileak.r = 15
+
+		/* shunt object */
+		soma {ishunt = new shunt(0.5)}
+		ishunt.G = 1.2873
+		ishunt.erev = -80
+		ishunt.Bm = 40
+		ishunt.Cm = -5.5
+		ishunt.Tm = 10
+		ishunt.Bh = 68
+		ishunt.Ch = 6.7
+		ishunt.Th = 760
+		ishunt.vstart = -55
+
+		/* thold object */
+		soma {sthold = new thold(0.5)}
+		sthold.steadystate = -43
+		sthold.reset = -30
+		sthold.decaytc = 10
+
+		soma stholdnc = new NetCon(&v(0.5), sthold, 0, 0, 1)
+		setpointer sthold.nc_thresh, stholdnc.threshold
+
+		/* spike overshoot objects */
+		soma {iunder = new oldtsyn(0.5)}
+		soma iundernc = new NetCon(&v(0.5), iunder, 0, 0, 1)
+	
+		iunder.G1_weight = 0.08
+		iunder.G2_weight = 0.0075
+		iunder.G3_weight = 0
+	
+		iunder.G1_eRev = -80
+		iunder.G2_eRev = -80
+		iunder.G3_eRev = 0
+	
+		iunder.G1_opentc = 5
+		iunder.G2_opentc = 5
+		iunder.G3_opentc = 1
+
+		iunder.G1_closetc = 5
+		iunder.G2_closetc = 400
+		iunder.G3_closetc = 1
+
+
+
+	}
+
+endtemplate VSIType

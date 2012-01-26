@@ -1,0 +1,62 @@
+objectvar DSI_C2s, DSI_C2nc
+C2.soma {DSI_C2s = new oldtsyn(0.5)}
+access DSI.soma
+DSI_C2nc = new NetCon(&v(0.5), DSI_C2s, 0, 0, 1)
+
+	
+
+objectvar DSI_VSIs, DSI_VSInc
+VSI.soma {DSI_VSIs = new oldtsyn(0.5)}
+access DSI.soma
+DSI_VSInc = new NetCon(&v(0.5), DSI_VSIs, 0, 0, 1)
+
+	
+
+objectvar C2_DSIs, C2_DSInc
+DSI.soma {C2_DSIs = new oldtsyn(0.5)}
+access C2.soma
+C2_DSInc = new NetCon(&v(0.5), C2_DSIs, 0, 0, 1)
+
+	
+
+
+objectvar C2_VSIs, C2_VSInc
+VSI.soma {C2_VSIs = new oldtsyn(0.5)}
+access C2.soma
+C2_VSInc = new NetCon(&v(0.5), C2_VSIs, 0, 0, 1)
+
+	
+
+
+
+objectvar VSI_DSIs, VSI_DSInc
+DSI.soma {VSI_DSIs = new oldtsyn(0.5)}
+access VSI.soma
+VSI_DSInc = new NetCon(&v(0.5), VSI_DSIs, 0, 0, 1)
+
+	
+
+
+objectvar VSI_C2s, VSI_C2nc
+C2.soma {VSI_C2s = new oldtsyn(0.5)}
+access VSI.soma
+VSI_C2nc = new NetCon(&v(0.5), VSI_C2s, 0, 0, 1)
+
+
+objectvar IF_DSIs, IF_DSInc
+DSI.soma {IF_DSIs = new oldtsyn(0.5)}
+access IF.soma
+IF_DSInc = new NetCon(&v(0.5), IF_DSIs, 0, 0, 1)
+
+
+objectvar DSI_DSIs, DSI_DSInc
+DSI.soma {DSI_DSIs = new oldtsyn(0.5)}
+access DSI.soma
+DSI_DSInc = new NetCon(&v(0.5), DSI_DSIs, 0, 0, 1)
+
+
+objectvar VSI_VSIs, VSI_VSInc
+VSI.soma {VSI_VSIs = new oldtsyn(0.5)}
+access VSI.soma
+VSI_VSInc = new NetCon(&v(0.5), VSI_VSIs, 0, 0, 1)
+

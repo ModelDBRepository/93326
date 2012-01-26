@@ -1,0 +1,11 @@
+ParmFitness: Unnamed multiple run protocol
+	FitnessGenerator: run2na
+		RunConstant:	IClamp[0].amp 2 2
+		RegionFitness:	Test.soma.v( 0.5 )
+
+	FitnessGenerator: run3na
+		RunConstant:	IClamp[0].amp 3 2
+		RegionFitness:	Test.soma.v( 0.5 )
+
+	Parameters:
+End ParmFitness

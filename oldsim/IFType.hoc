@@ -1,0 +1,28 @@
+//execute1("celltypes.eIFment(\"Cell\")")
+
+/* IF Type Template  */
+
+begintemplate IFType
+	/* public references for L30Type */
+	public soma
+	
+	/* public sections and objectvars */
+	create soma
+
+	proc init() {
+		/* paramaters */
+		cell_L = 5.6491
+		cell_nseg = 1
+		cell_cm = 11.28
+		cell_v = -47.06
+		
+		
+		/* Basic Settings */
+		soma.L =  cell_L
+		soma.nseg = cell_nseg
+		soma.cm = cell_cm
+		soma.v = cell_v
+
+	}
+
+endtemplate IFType

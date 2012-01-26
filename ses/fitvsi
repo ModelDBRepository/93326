@@ -1,0 +1,89 @@
+objectvar save_window_, rvp_
+objectvar scene_vector_[6]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+
+//Begin I/V Clamp Electrode
+{
+load_file("electrod.hoc")
+}
+{
+ocbox_=new Electrode(0)
+execute("can_locate=1 sec=\"TestType[0].soma\" xloc=0.5 locate(0)", ocbox_)
+execute("vc.dur[0]=0.1 vc.amp[0]=-65", ocbox_)
+execute("vc.dur[1]=2.5 vc.amp[1]=10", ocbox_)
+execute("vc.dur[2]=100 vc.amp[2]=-65", ocbox_)
+execute("stim.del=1000 stim.dur=5000 stim.amp=2", ocbox_)
+execute("vcsteps=5", ocbox_)
+execute("samp=stim.amp  store_vclamp() glyph()", ocbox_)
+ocbox_ = ocbox_.v1
+ocbox_.map("I/V Clamp Electrode", 326, 481, 229.5, 441)
+}
+objref ocbox_
+//End I/V Clamp Electrode
+
+{WindowMenu[0].ses_gid(1, 0, 1, "unnamed Window Group")}
+
+//Begin MulRunFitter[0]
+{
+load_file("mulfit.hoc", "MulRunFitter")
+}
+{
+ocbox_ = new MulRunFitter(1)
+}
+{object_push(ocbox_)}
+{
+version(5)
+ranfac = 2
+fspec = new File("fitvsi.ft1")
+fdat = new File("fitvsi.fd1")
+read_data()
+build()
+}
+{p.gengui(1, 646, 289, 290.7, 335.7)}
+{object_pop()}
+{
+ocbox_.map("MulRunFitter[0]", 897, 252, 294.3, 253.8)
+}
+objref ocbox_
+//End MulRunFitter[0]
+
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{
+xpanel("RunControl", 0)
+v_init = -65
+xvalue("Init","v_init", 1,"stdinit()", 1, 1 )
+xbutton("Init & Run","run()")
+xbutton("Stop","stoprun=1")
+runStopAt = 5
+xvalue("Continue til","runStopAt", 1,"{continuerun(runStopAt) stoprun=1}", 1, 1 )
+runStopIn = 1
+xvalue("Continue for","runStopIn", 1,"{continuerun(t + runStopIn) stoprun=1}", 1, 1 )
+xbutton("Single Step","steprun()")
+t = 7000
+xvalue("t","t", 2 )
+tstop = 7000
+xvalue("Tstop","tstop", 1,"tstop_changed()", 0, 1 )
+dt = 1
+xvalue("dt","dt", 1,"setdt()", 0, 1 )
+steps_per_ms = 1
+xvalue("Points plotted/ms","steps_per_ms", 1,"setdt()", 0, 1 )
+xcheckbox("Quiet",&stdrun_quiet,"")
+realtime = 2
+xvalue("Real Time","realtime", 0,"", 0, 1 )
+xpanel(40,192)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,7000,-80,40)
+scene_vector_[4] = save_window_
+{save_window_.view(0, -80, 7000, 120, 373, 49, 300.6, 200.8)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[0].")
+save_window_.addvar("Test.soma.v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+objectvar scene_vector_[1]
+{doNotify()}

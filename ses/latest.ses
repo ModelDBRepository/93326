@@ -1,0 +1,114 @@
+objectvar save_window_, rvp_
+objectvar scene_vector_[7]
+objectvar ocbox_, ocbox_list_, scene_, scene_list_
+{ocbox_list_ = new List()  scene_list_ = new List()}
+
+//Begin I/V Clamp Electrode
+{
+load_file("electrod.hoc")
+}
+{
+ocbox_=new Electrode(0)
+execute("can_locate=1 sec=\"C2Type[0].soma\" xloc=0.5 locate(0)", ocbox_)
+execute("vc.dur[0]=0.1 vc.amp[0]=-65", ocbox_)
+execute("vc.dur[1]=2.5 vc.amp[1]=10", ocbox_)
+execute("vc.dur[2]=100 vc.amp[2]=-65", ocbox_)
+execute("stim.del=5000 stim.dur=5000 stim.amp=0", ocbox_)
+execute("vcsteps=5", ocbox_)
+execute("samp=stim.amp  store_vclamp() glyph()", ocbox_)
+ocbox_ = ocbox_.v1
+ocbox_.map("I/V Clamp Electrode", 456, 594, 251.1, 570.6)
+}
+objref ocbox_
+//End I/V Clamp Electrode
+
+{WindowMenu[0].ses_gid(1, 0, 1, "unnamed Window Group")}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,60000,-80,40)
+scene_vector_[3] = save_window_
+{save_window_.view(0, -80, 60000, 120, 768, 25, 300.6, 200.8)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[0].")
+save_window_.addvar("C2.sthold.thresh", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("C2.soma.v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{
+xpanel("RunControl", 0)
+v_init = -47.5
+xvalue("Init","v_init", 1,"stdinit()", 1, 1 )
+xbutton("Init & Run","run()")
+xbutton("Stop","stoprun=1")
+runStopAt = 5
+xvalue("Continue til","runStopAt", 1,"{continuerun(runStopAt) stoprun=1}", 1, 1 )
+runStopIn = 1
+xvalue("Continue for","runStopIn", 1,"{continuerun(t + runStopIn) stoprun=1}", 1, 1 )
+xbutton("Single Step","steprun()")
+t = 5
+xvalue("t","t", 2 )
+tstop = 60000
+xvalue("Tstop","tstop", 1,"tstop_changed()", 0, 1 )
+dt = 0.5
+xvalue("dt","dt", 1,"setdt()", 0, 1 )
+steps_per_ms = 1
+xvalue("Points plotted/ms","steps_per_ms", 1,"setdt()", 0, 1 )
+xcheckbox("Quiet",&stdrun_quiet,"")
+realtime = 1
+xvalue("Real Time","realtime", 0,"", 0, 1 )
+xpanel(18,204)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,60000,-80,40)
+scene_vector_[4] = save_window_
+{save_window_.view(0, -80, 60000, 120, 888, 312, 300.6, 200.8)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[0].")
+save_window_.addvar("DSI.soma.v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("DSI.sthold.thresh", 1, 1, 0.8, 0.9, 2)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,60000,-80,40)
+scene_vector_[5] = save_window_
+{save_window_.view(0, -80, 60000, 120, 284, 85, 300.6, 200.8)}
+graphList[0].append(save_window_)
+save_window_.save_name("graphList[0].")
+save_window_.addvar("VSI.soma.v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("VSI.sthold.thresh", 1, 1, 0.8, 0.9, 2)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+
+//Begin VariableTimeStep
+{
+ocbox_ = NumericalMethodPanel[0]
+}
+{object_push(ocbox_)}
+{
+atol_ = 1e-05  CVode[0].atol(atol_)
+restore(1, 1)
+}
+{object_pop()}
+{
+ocbox_.map("VariableTimeStep", 43, 650, 231.3, 207)
+}
+objref ocbox_
+//End VariableTimeStep
+
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+{
+save_window_ = new Graph(0)
+save_window_.size(0,60000,0,1)
+scene_vector_[6] = save_window_
+{save_window_.view(0, 0, 60000, 1, 865, 644, 300.6, 200.8)}
+graphList[2].append(save_window_)
+save_window_.save_name("graphList[2].")
+save_window_.addvar("DRI.soma.v( 0.5 )", 1, 1, 0.8, 0.9, 2)
+save_window_.addvar("DRI.sthold.thresh", 1, 1, 0.8, 0.9, 2)
+}
+{WindowMenu[0].ses_gid(0, 0, 1, "unnamed Window Group")}
+objectvar scene_vector_[1]
+{doNotify()}
