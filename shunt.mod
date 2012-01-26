@@ -72,7 +72,7 @@ STATE { m (1) h (1)}
 BREAKPOINT {
 	mmax = 1/(1+exp((v+Bm)/Cm))
 	hmax = 1/(1+exp((v+Bh)/Ch))
-	SOLVE state METHOD euler
+	SOLVE state METHOD cnexp
 	i = G * m * h * (v - erev)
 	}	
 
